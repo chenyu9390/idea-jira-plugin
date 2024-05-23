@@ -1,11 +1,13 @@
 <idea-plugin>
     <id>com.ck.jira</id>
-    <name>Plugin display name here</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <name>idea jira</name>
+    <vendor email="1121926684@qq.com">CKang</vendor>
 
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    Implement Jira integration to help developers easily query and submit bugs<br>
+    <p>
+        实现Jira的对接，帮助开发者便捷的查询bug和提交bug
+    </p>
     ]]></description>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
@@ -14,14 +16,8 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- Add your extensions here -->
-        <applicationService serviceImplementation="settings.CommonSettings" order="first"/>
-        <applicationConfigurable id="easydoc.common.settings" displayName="GitLog" instance="configurable.CommonConfigurable"/>
+        <applicationService serviceImplementation="com.ck.settings.CommonSettings" order="first"/>
+        <applicationConfigurable id="easydoc.common.com.ck.settings" displayName="Jira" instance="com.ck.configurable.CommonConfigurable"/>
+        <toolWindow id="Jira" anchor="right" factoryClass="com.ck.window.JiraWindow"/>
     </extensions>
-
-    <actions>
-        <!-- Add your actions here -->
-        <action id="helloWord" class="action.HelloWordAction" text="action.HelloWordAction">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-        </action>
-    </actions>
 </idea-plugin>

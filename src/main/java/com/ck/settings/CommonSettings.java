@@ -1,9 +1,11 @@
-package settings;
+package com.ck.settings;
 
 import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import config.JiraConfig;
+import com.ck.config.JiraConfig;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
  * @Version 1.0.0
  * @Date 2024/5/22 23:34
  */
+@State(name = "JiraPlugin", storages = @Storage("JiraPlugin.xml"))
 public class CommonSettings implements PersistentStateComponent<JiraConfig> {
     private JiraConfig jiraConfig;
     /**
@@ -35,7 +38,7 @@ public class CommonSettings implements PersistentStateComponent<JiraConfig> {
 
     /**
      * This method is called when new component state is loaded. The method can and will be called several times, if
-     * config files were externally changed while IDE was running.
+     * com.ck.config files were externally changed while IDE was running.
      * <p>
      * State object should be used directly, defensive copying is not required.
      *
