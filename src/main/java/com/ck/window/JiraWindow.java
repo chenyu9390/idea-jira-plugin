@@ -33,14 +33,60 @@ public class JiraWindow implements ToolWindowFactory {
     private final JiraConfig jiraConfig = ServiceManager.getService(CommonSettings.class).getState();
     private final JiraService jiraService = new JiraService(jiraConfig);
     private static final Logger LOGGER = LoggerFactory.getLogger(JiraWindow.class);
-    @Override
-    public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        System.out.println("--------");
-        // 创建默认的空表格模型
-        DefaultTableModel model = new DefaultTableModel();
+
+    public void createToolWindowContent1(Project project, ToolWindow toolWindow) {
+        // 创建表格数据
+        Object[][] data = {
+                {"Bug001", "John", 25, "Male"},
+                {"Bug002", "Jane", 30, "Female"},
+                {"Bug003", "Doe", 40, "Male"}
+        };
+
+        // 创建表格列名
+        String[] columns = {"Bug ID", "Name", "Age", "Gender"};
+
+        // 创建默认表格模型
+        DefaultTableModel model = new DefaultTableModel(data, columns);
+
         // 创建 JTable
         JTable table = new JTable(model);
-        table.setEnabled(Boolean.FALSE);
+
+        // 为 "Gender" 列创建一个下拉选择框
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{"Male", "Female", "Other"});
+        TableColumn genderColumn = table.getColumnModel().getColumn(3); // Gender 列索引
+        genderColumn.setCellEditor(new DefaultCellEditor(comboBox));
+
+        // 创建 JScrollPane 来容纳 JTable，使得可以滚动显示
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        // 创建内容面板并添加 JScrollPane
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        // 创建内容并将其添加到工具窗口
+        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        Content content = contentFactory.createContent(panel, "", false);
+        toolWindow.getContentManager().addContent(content);
+    }
+    public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+        // 创建表格列名
+        String[] columns = {"BugId", "Summer","解决方案","修复版本","影响范围"};
+        List<JiraVo> issueList = jiraService.getIssueList();
+        Object[][] data = new Object[issueList.size()][5];
+        if (!issueList.isEmpty()) {
+            for (int i = 0; i < issueList.size(); i++) {
+                data[i][0] = issueList.get(i).getBugId();
+                data[i][1] = issueList.get(i).getSummary();
+            }
+        }
+        // 创建默认的空表格模型
+        DefaultTableModel model = new DefaultTableModel(data,columns);
+        // 创建 JTable
+        JTable table = new JTable(model);
+        // 为 "Gender" 列创建一个下拉选择框
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{"无", "已解决", "Other"});
+        TableColumn genderColumn = table.getColumnModel().getColumn(2); // Gender 列索引
+        genderColumn.setCellEditor(new DefaultCellEditor(comboBox));
         // 创建 JScrollPane 来容纳 JTable，使得可以滚动显示
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -51,21 +97,12 @@ public class JiraWindow implements ToolWindowFactory {
         refreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // 在按钮点击时执行数据刷新操作
-                refreshData(model);
             }
         });
         // 创建内容面板并添加 JScrollPane 和按钮
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
         panel.add(refreshButton, BorderLayout.SOUTH);
-        // 创建内容并将其添加到工具窗口
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
-        Content content = contentFactory.createContent(panel, "jira", false);
-        toolWindow.getContentManager().addContent(content);
-
-        // 初始加载数据
-        refreshData(model);
         table.addMouseListener(new MouseInputAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -88,20 +125,9 @@ public class JiraWindow implements ToolWindowFactory {
                 }
             }
         });
-    }
-
-    // 刷新数据的方法示例，您需要根据实际情况实现此方法
-    private void refreshData(DefaultTableModel model) {
-        // 创建表格列名
-        String[] columns = {"BugId", "Summer","解决方案","修复版本","影响范围"};
-        List<JiraVo> issueList = jiraService.getIssueList();
-        Object[][] data = new Object[issueList.size()][5];
-        if (!issueList.isEmpty()) {
-            for (int i = 0; i < issueList.size(); i++) {
-                data[i][0] = issueList.get(i).getBugId();
-                data[i][1] = issueList.get(i).getSummary();
-            }
-        }
-        model.setDataVector(data, columns);
+        // 创建内容并将其添加到工具窗口
+        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        Content content = contentFactory.createContent(panel, "jira", false);
+        toolWindow.getContentManager().addContent(content);
     }
 }
