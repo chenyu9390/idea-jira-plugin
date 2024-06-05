@@ -1,5 +1,9 @@
 package com.ck.vo;
 
+import com.ck.dot.TransitionDto;
+
+import java.util.List;
+
 public class JiraVo {
 
     private String bugId;
@@ -7,6 +11,16 @@ public class JiraVo {
     private String summary;
 
     private String url;
+
+    List<TransitionDto> dtos;
+
+    public List<TransitionDto> getDtos() {
+        return dtos;
+    }
+
+    public void setDtos(List<TransitionDto> dtos) {
+        this.dtos = dtos;
+    }
 
     public String getBugId() {
         return bugId;

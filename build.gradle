@@ -38,6 +38,8 @@ intellij {
 dependencies {
     implementation 'cn.hutool:hutool-all:5.8.26'
     implementation 'com.mashape.unirest:unirest-java:1.4.9'
+    implementation 'net.rcarz:jira-client:0.5'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
 }
 
 //配置编码格式

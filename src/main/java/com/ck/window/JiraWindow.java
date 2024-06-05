@@ -19,14 +19,17 @@ import com.ck.vo.JiraVo;
 
 import javax.swing.*;
 import javax.swing.event.MouseInputAdapter;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import static javax.swing.text.StyleConstants.getComponent;
 
 public class JiraWindow implements ToolWindowFactory {
 
@@ -70,9 +73,9 @@ public class JiraWindow implements ToolWindowFactory {
     }
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         // 创建表格列名
-        String[] columns = {"BugId", "Summer","解决方案","修复版本","影响范围"};
+        String[] columns = {"BugId", "Summer","解决方案","修复版本","影响范围","提交"};
         List<JiraVo> issueList = jiraService.getIssueList();
-        Object[][] data = new Object[issueList.size()][5];
+        Object[][] data = new Object[issueList.size()][6];
         if (!issueList.isEmpty()) {
             for (int i = 0; i < issueList.size(); i++) {
                 data[i][0] = issueList.get(i).getBugId();
@@ -84,9 +87,10 @@ public class JiraWindow implements ToolWindowFactory {
         // 创建 JTable
         JTable table = new JTable(model);
         // 为 "Gender" 列创建一个下拉选择框
-        JComboBox<String> comboBox = new JComboBox<>(new String[]{"无", "已解决", "Other"});
-        TableColumn genderColumn = table.getColumnModel().getColumn(2); // Gender 列索引
-        genderColumn.setCellEditor(new DefaultCellEditor(comboBox));
+        JComboBox<String> comboBox = new JComboBox<>(new String[]{"无", "已解决", "不修复", "延迟修复", "重复的BUG", "无效的BUG"});
+        table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboBox));
+        table.getColumnModel().getColumn(5).setCellEditor(new CustomCellEditor());
+        table.getColumnModel().getColumn(5).setCellRenderer(new CustomCellRenderer());
         // 创建 JScrollPane 来容纳 JTable，使得可以滚动显示
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -129,5 +133,122 @@ public class JiraWindow implements ToolWindowFactory {
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
         Content content = contentFactory.createContent(panel, "jira", false);
         toolWindow.getContentManager().addContent(content);
+    }
+
+    public void createToolWindowContent2(@NotNull Project project, @NotNull ToolWindow toolWindow){
+        JFrame frame = new JFrame("Custom Table Example");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JTable table = new JTable(new CustomTableModel());
+        table.setRowHeight(30);
+
+        TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(1).setCellEditor(new CustomCellEditor());
+        columnModel.getColumn(1).setCellRenderer(new CustomCellRenderer());
+
+        frame.add(new JScrollPane(table));
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+}
+
+class CustomTableModel extends AbstractTableModel {
+    private final String[] columnNames = {"Name", "Options"};
+    private final Object[][] data = {
+            {"Item 1", "Option 1A"},
+            {"Item 2", "Option 2A"},
+            {"Item 3", "Option 3A"},
+            {"Item 4", "Option 4A"},
+    };
+
+    @Override
+    public int getRowCount() {
+        return data.length;
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columnNames.length;
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        return data[rowIndex][columnIndex];
+    }
+
+    @Override
+    public String getColumnName(int columnIndex) {
+        return columnNames[columnIndex];
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return columnIndex == 1; // Only the "Options" column is editable
+    }
+
+    @Override
+    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        data[rowIndex][columnIndex] = aValue;
+        fireTableCellUpdated(rowIndex, columnIndex);
+    }
+}
+
+class CustomCellEditor extends AbstractCellEditor implements TableCellEditor {
+    private final Map<Integer, JComboBox<String>> comboBoxes = new HashMap<>();
+
+    private JComboBox<String> currentComboBox;
+
+    public CustomCellEditor() {
+        String[] options1 = {"Option 1A", "Option 1B", "Option 1C"};
+        String[] options2 = {"Option 2A", "Option 2B", "Option 2C"};
+        String[] options3 = {"Option 3A", "Option 3B", "Option 3C"};
+        String[] options4 = {"Option 4A", "Option 4B", "Option 4C"};
+
+        comboBoxes.put(0, new JComboBox<>(options1));
+        comboBoxes.put(1, new JComboBox<>(options2));
+        comboBoxes.put(2, new JComboBox<>(options3));
+        comboBoxes.put(3, new JComboBox<>(options4));
+    }
+
+    @Override
+    public Object getCellEditorValue() {
+        return currentComboBox.getSelectedItem();
+    }
+
+    @Override
+    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+        currentComboBox = comboBoxes.get(row);
+        currentComboBox.setSelectedItem(value);
+        return currentComboBox;
+    }
+}
+class CustomCellRenderer extends JComboBox<String> implements TableCellRenderer {
+    public CustomCellRenderer() {
+        super();
+    }
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        removeAllItems();
+        if (row == 0) {
+            addItem("Option 1A");
+            addItem("Option 1B");
+            addItem("Option 1C");
+        } else if (row == 1) {
+            addItem("Option 2A");
+            addItem("Option 2B");
+            addItem("Option 2C");
+        } else if (row == 2) {
+            addItem("Option 3A");
+            addItem("Option 3B");
+            addItem("Option 3C");
+        } else if (row == 3) {
+            addItem("Option 4A");
+            addItem("Option 4B");
+            addItem("Option 4C");
+        }
+        setSelectedItem(value);
+        return this;
     }
 }
