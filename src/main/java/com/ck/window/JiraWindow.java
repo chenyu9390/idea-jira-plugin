@@ -1,11 +1,13 @@
 package com.ck.window;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.ck.dot.TransitionDto;
 import com.intellij.ide.todo.TodoView;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.DumbService;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
@@ -78,12 +80,17 @@ public class JiraWindow implements ToolWindowFactory {
                 // 获取点击的行和列索引
                 int row = table.rowAtPoint(e.getPoint());
                 int col = table.columnAtPoint(e.getPoint());
+                Messages.showMessageDialog("232",
+                        "Selection", Messages.getInformationIcon());
                 CustomTableModel model = (CustomTableModel) table.getModel();
+                Messages.showMessageDialog("111",
+                        "Selection", Messages.getInformationIcon());
                 StringBuilder rowData = new StringBuilder();
                 for (int cl = 0; cl < model.getColumnCount(); cl++) {
                     rowData.append(model.getValueAt(row, cl)).append(" ");
                 }
-                System.out.println(rowData.toString());
+                Messages.showMessageDialog(JSONUtil.toJsonStr(rowData),
+                        "Selection", Messages.getInformationIcon());
                 if (col == 0) {
                     // 获取点击的单元格数据
                     String bugId = (String) table.getValueAt(row, col);
@@ -163,11 +170,11 @@ class CustomTableModel extends AbstractTableModel {
 }
 
 class CustomCellEditor extends AbstractCellEditor implements TableCellEditor {
-    private final Map<Integer, JComboBox<String>> comboBoxes = new HashMap<>();
-    private JComboBox<String> currentComboBox;
+    private final Map<Integer, JComboBox<TransitionDto>> comboBoxes = new HashMap<>();
+    private JComboBox<TransitionDto> currentComboBox;
     public CustomCellEditor(List<JiraVo> issueList) {
         for (int i = 0; i < issueList.size(); i++) {
-            comboBoxes.put(i, new JComboBox<>(issueList.get(i).getDtos().stream().map(TransitionDto::getName).toArray(String[]::new)));
+            comboBoxes.put(i, new JComboBox<>(issueList.get(i).getDtos().toArray(new TransitionDto[0])));
         }
     }
 
@@ -183,7 +190,7 @@ class CustomCellEditor extends AbstractCellEditor implements TableCellEditor {
         return currentComboBox;
     }
 }
-class CustomCellRenderer extends JComboBox<String> implements TableCellRenderer {
+class CustomCellRenderer extends JComboBox<TransitionDto> implements TableCellRenderer {
     private List<JiraVo> issueList;
     public CustomCellRenderer(List<JiraVo> issueList) {
         this.issueList = issueList;
@@ -193,7 +200,7 @@ class CustomCellRenderer extends JComboBox<String> implements TableCellRenderer 
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         removeAllItems();
         for (int i = 0; i < issueList.size(); i++) {
-            issueList.get(i).getDtos().stream().map(TransitionDto::getId).forEach(this::addItem);
+            issueList.get(i).getDtos().forEach(this::addItem);
         }
         setSelectedItem(value);
         return this;
