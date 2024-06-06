@@ -1,6 +1,7 @@
 package com.ck.vo;
 
 import com.ck.dot.TransitionDto;
+import com.google.common.collect.Lists;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class JiraVo {
 
     private String url;
 
-    List<TransitionDto> dtos;
+    List<TransitionDto> dtos = Lists.newArrayList();
 
     public List<TransitionDto> getDtos() {
         return dtos;

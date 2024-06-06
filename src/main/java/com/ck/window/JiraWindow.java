@@ -31,6 +31,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 
 import static javax.swing.text.StyleConstants.getComponent;
@@ -50,10 +51,25 @@ public class JiraWindow implements ToolWindowFactory {
             for (int i = 0; i < issueList.size(); i++) {
                 data[i][0] = issueList.get(i).getBugId();
                 data[i][1] = issueList.get(i).getSummary();
+                data[i][2] = issueList.get(i).getDtos().get(0);
             }
         }
         // 创建默认的空表格模型
-        DefaultTableModel model = new DefaultTableModel(data,columns);
+        DefaultTableModel model = new DefaultTableModel(data,columns){
+            /**
+             * Returns <code>Object.class</code> regardless of <code>columnIndex</code>.
+             *
+             * @param columnIndex the column being queried
+             * @return the Object.class
+             */
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                if (columnIndex == 2) {
+                    return TransitionDto.class;
+                }
+                return super.getColumnClass(columnIndex);
+            }
+        };
         // 创建 JTable
         JTable table = new JTable(model);
         repairPlan(table);
@@ -82,14 +98,15 @@ public class JiraWindow implements ToolWindowFactory {
                 int col = table.columnAtPoint(e.getPoint());
                 Messages.showMessageDialog("232",
                         "Selection", Messages.getInformationIcon());
-                CustomTableModel model = (CustomTableModel) table.getModel();
+                DefaultTableModel model = (DefaultTableModel) table.getModel();
                 Messages.showMessageDialog("111",
                         "Selection", Messages.getInformationIcon());
                 StringBuilder rowData = new StringBuilder();
                 for (int cl = 0; cl < model.getColumnCount(); cl++) {
                     rowData.append(model.getValueAt(row, cl)).append(" ");
                 }
-                Messages.showMessageDialog(JSONUtil.toJsonStr(rowData),
+                TransitionDto dto = (TransitionDto)table.getValueAt(row, 2);
+                Messages.showMessageDialog(JSONUtil.toJsonStr(dto),
                         "Selection", Messages.getInformationIcon());
                 if (col == 0) {
                     // 获取点击的单元格数据
@@ -119,53 +136,12 @@ public class JiraWindow implements ToolWindowFactory {
     private void repairPlan(JTable table){
         // 为 "Gender" 列创建一个下拉选择框
         JComboBox<String> comboBox = new JComboBox<>(new String[]{"无", "已解决", "不修复", "延迟修复", "重复的BUG", "无效的BUG"});
-        table.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboBox));
+        table.getColumnModel().getColumn(3).setCellEditor(new DefaultCellEditor(comboBox));
     }
 
     private void dynamicTransitions(List<JiraVo> issueList,JTable table) {
-        table.getColumnModel().getColumn(3).setCellEditor(new CustomCellEditor(issueList));
-        table.getColumnModel().getColumn(3).setCellRenderer(new CustomCellRenderer(issueList));
-    }
-}
-
-class CustomTableModel extends AbstractTableModel {
-    private final String[] columnNames = {"Name", "Options"};
-    private final Object[][] data = {
-            {"Item 1", "Option 1A"},
-            {"Item 2", "Option 2A"},
-            {"Item 3", "Option 3A"},
-            {"Item 4", "Option 4A"},
-    };
-
-    @Override
-    public int getRowCount() {
-        return data.length;
-    }
-
-    @Override
-    public int getColumnCount() {
-        return columnNames.length;
-    }
-
-    @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        return data[rowIndex][columnIndex];
-    }
-
-    @Override
-    public String getColumnName(int columnIndex) {
-        return columnNames[columnIndex];
-    }
-
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return columnIndex == 1; // Only the "Options" column is editable
-    }
-
-    @Override
-    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        data[rowIndex][columnIndex] = aValue;
-        fireTableCellUpdated(rowIndex, columnIndex);
+        table.getColumnModel().getColumn(2).setCellEditor(new CustomCellEditor(issueList));
+        table.getColumnModel().getColumn(2).setCellRenderer(new CustomCellRenderer(issueList));
     }
 }
 
