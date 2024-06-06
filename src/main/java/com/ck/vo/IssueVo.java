@@ -5,7 +5,7 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
-public class JiraVo {
+public class IssueVo {
 
     private String bugId;
 
@@ -14,6 +14,16 @@ public class JiraVo {
     private String url;
 
     List<TransitionDto> dtos = Lists.newArrayList();
+
+    List<VersionVo> versionVos = Lists.newArrayList();
+
+    public List<VersionVo> getVersionVos() {
+        return versionVos;
+    }
+
+    public void setVersionVos(List<VersionVo> versionVos) {
+        this.versionVos = versionVos;
+    }
 
     public List<TransitionDto> getDtos() {
         return dtos;
