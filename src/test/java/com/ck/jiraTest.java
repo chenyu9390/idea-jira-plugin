@@ -1,9 +1,12 @@
 package com.ck;
 
+import cn.hutool.json.JSONUtil;
 import com.google.common.collect.Maps;
+import com.google.errorprone.annotations.Var;
 import com.google.protobuf.compiler.PluginProtos;
 import net.rcarz.jiraclient.*;
 import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -12,6 +15,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class jiraTest {
 
@@ -36,6 +40,22 @@ public class jiraTest {
         String url = "http://192.168.29.116:8080/rest/api/2/issue/createmeta?projectKeys=PMS";
         JSON json = client.getRestClient().get(URI.create(url));
         System.out.println(json);
+    }
+
+    @Test
+    public void getIssue() throws JiraException {
+        Issue issue = client.getIssue("HWAEC-47");
+        System.out.println(JSONUtil.toJsonStr(issue));
+        System.out.println(issue.getAssignee().toString());
+        System.out.println(issue.getIssueType());
+        System.out.println(issue.getStatus());
+        System.out.println(issue.getPriority());
+        System.out.println(issue.getLabels());
+        System.out.println(issue.getVotes());
+        for (IssueLink issueLink : issue.getIssueLinks()) {
+            System.out.println(issueLink);
+        }
+        System.out.println(issue.getIssueLinks());
     }
 
     @Test
@@ -94,7 +114,7 @@ public class jiraTest {
     }
 
     /**
-     * 添加手表
+     * 添加Watcher
      *
      * @throws JiraException jira异常
      */
@@ -130,10 +150,18 @@ public class jiraTest {
         issue.transition().execute("接受");
     }
 
+    /**
+     * 客户自定义字段
+     *
+     * @throws JiraException      吉拉例外
+     * @throws URISyntaxException urisyntax异常
+     * @throws RestException      休息例外
+     * @throws IOException        IOException
+     */
     @Test
     public void customerField() throws JiraException, URISyntaxException, RestException, IOException {
         //获取自定义字段
-        JSON json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/customFields"));
+        JSON json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/customFields?projectIds=HWAE-CCMS&maxResults=600"));
         System.out.println(json);
         System.out.println("---------------");
         Issue issue = client.getIssue(ISSUE_KEY);
@@ -155,5 +183,26 @@ public class jiraTest {
         System.out.println(issue.getField(Field.VERSIONS));
         List<Attachment> attachments = Field.getResourceArray(Attachment.class, issue.getField(Field.ATTACHMENT), client.getRestClient());
         System.out.println(attachments);
+    }
+
+    @Test
+    public void customFieldOption() throws Exception {
+        JSON json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/field"));
+        //System.out.println(json);
+        IssueType issueType = client.getIssue("HWAEC-40").getIssueType();
+        //System.out.println(issueType);
+        Object object = client.getIssue("HWAEC-40").getField("customfield_13400");
+        //System.out.println(object.toString());
+        json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/customFieldOption/13400"));
+        //System.out.println(json);
+        json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/configuration"));
+        //System.out.println(json);
+        //
+        Project project = client.getProject("HWAEC");
+        json = client.getRestClient().get(new URI("http://192.168.29.116:8080/rest/api/2/project/"+project.getId()+"/properties"));
+        System.out.println(json);
+
+        List<CustomFieldOption> customFieldAllowedValues = client.getCustomFieldAllowedValues("customfield_13400", project.getKey(), issueType.getName());
+        System.out.println(JSONUtil.toJsonStr(customFieldAllowedValues));
     }
 }
